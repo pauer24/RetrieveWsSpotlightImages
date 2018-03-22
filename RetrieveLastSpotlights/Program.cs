@@ -1,7 +1,8 @@
-﻿using System.Linq;
+﻿using FreeImageAPI;
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 
 namespace RetrieveLastSpotlights
 {
@@ -9,7 +10,7 @@ namespace RetrieveLastSpotlights
     {
         private static string UserDesktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
         private const string WindowsSpotlightImagesPath = @"C:\Users\PauCervello\AppData\Local\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets";
-        private const int ImagesToTake = 10;
+        private const int ImagesToTake = 4;
 
         private static void Main(string[] args)
         {
@@ -18,9 +19,22 @@ namespace RetrieveLastSpotlights
             Directory.EnumerateFiles(WindowsSpotlightImagesPath)
                 .Where(path => new FileInfo(path).Length != 0)
                 .OrderByDescending(path => File.GetLastWriteTime(path))
+                .Take(ImagesToTake * 2)
+                .Where(imagePath => !ImageMethods.IsVerticallyOriented(imagePath))
                 .Take(ImagesToTake)
                 .ForEachAndContinue(path => Console.WriteLine($"{File.GetLastWriteTime(path)}  {Path.GetFileName(path)})"))
-                .ForEachAndContinue(path => File.Copy(path, Path.Combine(UserDesktopDirectory, $"wsSpotlight_{Path.GetFileName(path)}.jpg"), true));
+                .ForEachAndContinue(path => File.Copy(path, Path.Combine(UserDesktopDirectory, $"wsSpotlight_{Path.GetFileName(path).Substring(0, 5)}.jpg"), true));
+        }
+    }
+
+    public static class ImageMethods
+    {
+        public static bool IsVerticallyOriented(string imagePath)
+        {
+            using (var img = FreeImageBitmap.FromFile(imagePath))
+            {
+                return img.Height > img.Width;
+            }
         }
     }
 
