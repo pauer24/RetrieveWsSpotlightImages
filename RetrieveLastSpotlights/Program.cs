@@ -9,8 +9,8 @@ namespace RetrieveLastSpotlights
     internal class Program
     {
         private static string UserDesktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        private const string WindowsSpotlightImagesPath = @"C:\Users\PauCervello\AppData\Local\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets";
-        private const int ImagesToTake = 4;
+        private static string WindowsSpotlightImagesPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets";
+        private const int ImagesToTake = 6;
 
         private static void Main(string[] args)
         {
