@@ -1,18 +1,16 @@
-﻿using System.Linq;
+﻿using FreeImageAPI;
 using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Drawing;
-using SkiaSharp;
+using System.IO;
+using System.Linq;
 
 namespace RetrieveLastSpotlights
 {
     internal class Program
     {
-        private static string UserDesktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        //private const string Path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)
-        private static readonly string WindowsSpotlightImagesPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\AppData\Local\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets";
-        private const int ImagesToTake = 10;
+        private static readonly string UserDesktopDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+        private static readonly string WindowsSpotlightImagesPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\Packages\Microsoft.Windows.ContentDeliveryManager_cw5n1h2txyewy\LocalState\Assets";
+        private const int ImagesToTake = 6;
 
         private static void Main(string[] args)
         {
@@ -20,11 +18,22 @@ namespace RetrieveLastSpotlights
 
             Directory.EnumerateFiles(WindowsSpotlightImagesPath)
                 .Where(path => new FileInfo(path).Length != 0)
-                .Where(path => path.IsExpectedImageFormat())
+                .Where(imagePath => ImageMethods.HasDesktopImageFormat(imagePath))
                 .OrderByDescending(path => File.GetLastWriteTime(path))
                 .Take(ImagesToTake)
                 .ForEachAndContinue(path => Console.WriteLine($"{File.GetLastWriteTime(path)}  {Path.GetFileName(path)})"))
-                .ForEachAndContinue(path => File.Copy(path, Path.Combine(UserDesktopDirectory, $"wsSpotlight_{Path.GetFileName(path)}.jpg"), true));
+                .ForEachAndContinue(path => File.Copy(path, Path.Combine(UserDesktopDirectory, $"wsSpotlight_{Path.GetFileName(path).Substring(0, 5)}.jpg"), true));
+        }
+    }
+
+    public static class ImageMethods
+    {
+        public static bool HasDesktopImageFormat(string imagePath)
+        {
+            using (var img = FreeImageBitmap.FromFile(imagePath))
+            {
+                return img.Width > img.Height && img.Width > 1900;
+            }
         }
     }
 
@@ -46,23 +55,6 @@ namespace RetrieveLastSpotlights
             }
 
             return enumerable;
-        }
-    }
-
-    public static class StringExtensionMethods
-    {
-        public static bool IsExpectedImageFormat(this string imagePath)
-        {
-            using (var input = File.OpenRead(imagePath))
-            {
-                using (var inputStream = new SKManagedStream(input))
-                {
-                    using (var original = SKBitmap.Decode(inputStream))
-                    {
-                        return original.Width > original.Height && original.Width > 1000;
-                    }
-                }
-            }
         }
     }
 }
